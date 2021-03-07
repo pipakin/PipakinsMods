@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipakinsMiniBosses", "PipakinsMiniBosses\PipakinsMiniBosses.csproj", "{98899238-2DD5-4775-9264-A4331EFA5104}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PickableTimeFixMod", "PickableTimeFixMod\PickableTimeFixMod.csproj", "{506FFA8E-B5DA-4ECC-9BCB-BCF9A84C7B83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkillInjector", "SkillInjector\SkillInjector.csproj", "{95D13155-7118-46C2-9D7E-AA449E0DE98D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatheringSkillMod", "GatheringSkillMod\GatheringSkillMod.csproj", "{1714B592-431B-42D6-AD06-0A0307E598C0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{98899238-2DD5-4775-9264-A4331EFA5104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98899238-2DD5-4775-9264-A4331EFA5104}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98899238-2DD5-4775-9264-A4331EFA5104}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98899238-2DD5-4775-9264-A4331EFA5104}.Release|Any CPU.Build.0 = Release|Any CPU
+		{506FFA8E-B5DA-4ECC-9BCB-BCF9A84C7B83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{506FFA8E-B5DA-4ECC-9BCB-BCF9A84C7B83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{506FFA8E-B5DA-4ECC-9BCB-BCF9A84C7B83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{506FFA8E-B5DA-4ECC-9BCB-BCF9A84C7B83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95D13155-7118-46C2-9D7E-AA449E0DE98D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D13155-7118-46C2-9D7E-AA449E0DE98D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D13155-7118-46C2-9D7E-AA449E0DE98D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D13155-7118-46C2-9D7E-AA449E0DE98D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1714B592-431B-42D6-AD06-0A0307E598C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1714B592-431B-42D6-AD06-0A0307E598C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1714B592-431B-42D6-AD06-0A0307E598C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1714B592-431B-42D6-AD06-0A0307E598C0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {64DD6D47-2227-44D4-8C11-6117AB775637}
+	EndGlobalSection
+EndGlobal
