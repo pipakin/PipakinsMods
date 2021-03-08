@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.0.1")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.0.2")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
@@ -22,6 +22,8 @@ namespace Pipakin.GatheringMod
 
 
         private static ConfigEntry<int> maxDropMultiplier;
+
+        
 
         void Awake()
         {
@@ -177,7 +179,7 @@ namespace Pipakin.GatheringMod
                 var mult = 1.0f + character.GetSkillFactor((Skills.SkillType)SKILL_TYPE) * (float)maxDropMultiplier.Value;
                 Debug.Log("Gathering multiplier set to " + mult);
 
-                ___m_nview.GetZDO().Set("gathering_drop_mult", 1.0f + character.GetSkillFactor((Skills.SkillType)SKILL_TYPE) * 3);
+                ___m_nview.GetZDO().Set("gathering_drop_mult", mult);
             }
         }
 
@@ -192,7 +194,10 @@ namespace Pipakin.GatheringMod
                     return;
                 }
 
-                stack = (int)___m_nview.GetZDO().GetFloat("gathering_drop_mult", 1.0f) * stack;
+                var mult = ___m_nview.GetZDO().GetFloat("gathering_drop_mult", 1.0f);
+                Debug.Log("Gathering multiplier read as " + mult);
+
+                stack = (int)mult * stack;
                 Debug.Log("Gathering boosted stack size to " + stack);
             }
         }
