@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 namespace PipakinsMiniBosses
 {
     [BepInPlugin("com.pipakin.PipakinsMiniBosses", "PipakinsMiniBosses", "0.1")]
-    [BepInProcess("valheim.exe")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class PipakinsMiniBosses : BaseUnityPlugin
     {

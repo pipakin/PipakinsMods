@@ -8,8 +8,7 @@ using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.0.0")]
-    [BepInProcess("valheim.exe")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.0.1")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin

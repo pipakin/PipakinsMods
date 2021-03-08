@@ -3,8 +3,7 @@ using HarmonyLib;
 
 namespace PickableTimeFixMod
 {
-    [BepInPlugin("com.pipakin.PickableTimeFixMod", "PickableTimeFixMod", "1.0.0")]
-    [BepInProcess("valheim.exe")]
+    [BepInPlugin("com.pipakin.PickableTimeFixMod", "PickableTimeFixMod", "1.0.1")]
     public class PickableTimeFixMod : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("com.pipakin.PickableTimeFixMod");
