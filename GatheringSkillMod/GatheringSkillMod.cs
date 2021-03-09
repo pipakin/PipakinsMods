@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.0.2")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.1.0")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
@@ -70,6 +70,18 @@ namespace Pipakin.GatheringMod
                     //add some skillzz!
                     character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
                 }
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Pickable), "Awake")]
+        public static class GatheringHookRPCs
+        {
+
+            [HarmonyPostfix]
+            public static void Postfix(ZNetView ___m_nview, Pickable __instance)
+            {
+                __instance.RegisterSetMultiplierRPC();
             }
         }
 
@@ -158,7 +170,6 @@ namespace Pipakin.GatheringMod
                 //Don't do anything if we're the client. Trust the server in that case.
                 if (__state != null && __state.picked == ___m_picked && ___m_nview.IsOwner())
                 {
-                    ___m_nview.GetZDO().Set("gathering_drop_mult", 1.0f);
                     ___m_nview.GetZDO().Set("picked_time", __state.picked_time);
                 }
             }
@@ -169,7 +180,7 @@ namespace Pipakin.GatheringMod
         public static class AddDropMultiplier
         {
             [HarmonyPrefix]
-            public static void Prefix(Humanoid character, bool repeat, ZNetView ___m_nview, bool ___m_picked)
+            public static void Prefix(Humanoid character, bool repeat, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
             {
                 if (!___m_nview.IsValid() || ___m_picked)
                 {
@@ -179,7 +190,7 @@ namespace Pipakin.GatheringMod
                 var mult = 1.0f + character.GetSkillFactor((Skills.SkillType)SKILL_TYPE) * (float)maxDropMultiplier.Value;
                 Debug.Log("Gathering multiplier set to " + mult);
 
-                ___m_nview.GetZDO().Set("gathering_drop_mult", mult);
+                __instance.SetMultiplier(mult);
             }
         }
 
@@ -187,18 +198,20 @@ namespace Pipakin.GatheringMod
         public static class DropMultiply
         {
             [HarmonyPrefix]
-            public static void Prefix(GameObject prefab, int offset, ref int stack, ZNetView ___m_nview, bool ___m_picked)
+            public static void Prefix(GameObject prefab, int offset, ref int stack, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
             {
                 if (!___m_nview.IsValid())
                 {
                     return;
                 }
 
-                var mult = ___m_nview.GetZDO().GetFloat("gathering_drop_mult", 1.0f);
+                var mult = __instance.GetMultiplier();
                 Debug.Log("Gathering multiplier read as " + mult);
 
                 stack = (int)mult * stack;
                 Debug.Log("Gathering boosted stack size to " + stack);
+
+                __instance.ClearMultiplier();
             }
         }
     }

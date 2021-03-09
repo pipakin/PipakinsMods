@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Pipakin.SkillInjectorMod
 {
-    [BepInPlugin("com.pipakin.SkillInjectorMod", "SkillInjectorMod", "1.0.1")]
+    [BepInPlugin("com.pipakin.SkillInjectorMod", "SkillInjectorMod", "1.0.2")]
     public class SkillInjector : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("com.pipakin.SkillInjectorMod");
@@ -125,10 +125,10 @@ namespace Pipakin.SkillInjectorMod
                         skill.m_level = Mathf.Clamp(skill.m_level, 0f, 100f);
                         ___m_player.Message(MessageHud.MessageType.TopLeft, "Skill incresed " + value2.name + ": " + (int)skill.m_level, 0, skill.m_info.m_icon);
                         Console.instance.Print("Skill " + value2.name + " = " + skill.m_level);
-                        return true;
+                        return false;
                     }
                 }
-                return false;
+                return true;
             }
         }
 
@@ -145,10 +145,10 @@ namespace Pipakin.SkillInjectorMod
                     if (value2.name.ToLower() == name)
                     {
                         ___m_player.GetSkills().ResetSkill((Skills.SkillType)id);
-                        return true;
+                        return false;
                     }
                 }
-                return false;
+                return true;
             }
         }
     }
