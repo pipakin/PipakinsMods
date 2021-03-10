@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Pipakin.FitnessSkillMod
 {
-    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.0")]
+    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.1")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class FitnessSkill : BaseUnityPlugin
     {
