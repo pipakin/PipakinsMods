@@ -3,7 +3,8 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using Pipakin.SkillInjectorMod;
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace Pipakin.GatheringMod
@@ -11,6 +12,7 @@ namespace Pipakin.GatheringMod
     [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.1.0")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.github.johndowson.CropReplant", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("com.pipakin.GatheringSkillMod");
@@ -23,11 +25,14 @@ namespace Pipakin.GatheringMod
 
         private static ConfigEntry<int> maxDropMultiplier;
 
-        
+
 
         void Awake()
         {
-            harmony.PatchAll();
+            harmony.PatchAll(typeof(CRCompatability));
+
+            harmony.PatchAll(typeof(PickablePatch));
+            harmony.PatchAll(typeof(FixPickableTime));
 
             configSkillIncrease = Config.Bind("Progression",
                                            "LevelingIncrement",
@@ -56,40 +61,78 @@ namespace Pipakin.GatheringMod
         //hopefully this doesn't conflict.
         public const int SKILL_TYPE = 242;
 
-        [HarmonyPatch(typeof(Pickable), "Interact")]
-        [HarmonyBefore(new string[] { "com.github.johndowson.CropReplant" })]
-        public static class GardeningSkillIncrease
+
+
+        [HarmonyPatch(typeof(CropReplant.PickableExt), "Replant")]
+        [HarmonyAfter(new string[] { "com.github.johndowson.CropReplant" })]
+        public static class CRCompatability
         {
+            [HarmonyPrefix]
+            public static void GardeningSkillIncrease(Pickable pickable, Player player)
+            {
+                if (!pickable.m_picked)
+                {
+                    player.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
+                }
+            }
+            [HarmonyPrefix]
+            public static void AddDropMultiplier(Pickable pickable, Player player)
+            {
+                if (!pickable.m_nview.IsValid() || pickable.m_picked)
+                {
+                    return;
+                }
+
+                var mult = 1.0f + player.GetSkillFactor((Skills.SkillType)SKILL_TYPE) * (float)maxDropMultiplier.Value;
+                Debug.Log("Gathering multiplier set to " + mult);
+
+                pickable.SetMultiplier(mult);
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Pickable), "SetPicked")]
+        public static class FixPickableTime
+        {
+            public class PickState
+            {
+                public long picked_time;
+                public bool picked;
+            }
 
             [HarmonyPrefix]
-            public static void Prefix(Humanoid character, bool ___m_picked)
+            public static void Prefix(ZNetView ___m_nview, bool ___m_picked, ref PickState __state)
             {
-                //if I'm interacting and it's not picked, I'm gonna pick it!
-                if (!___m_picked)
+                __state = new PickState();
+                __state.picked_time = ___m_nview.GetZDO().GetLong("picked_time", 0L);
+                __state.picked = ___m_picked;
+            }
+
+            [HarmonyPostfix]
+            public static void Postfix(ZNetView ___m_nview, bool ___m_picked, ref PickState __state)
+            {
+                //if we're not changing the state, don't change the pick time.
+                //Don't do anything if we're the client. Trust the server in that case.
+                if (__state != null && __state.picked == ___m_picked && ___m_nview.IsOwner())
                 {
-                    //add some skillzz!
-                    character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
+                    ___m_nview.GetZDO().Set("picked_time", __state.picked_time);
                 }
             }
         }
 
-
-        [HarmonyPatch(typeof(Pickable), "Awake")]
-        public static class GatheringHookRPCs
+        [HarmonyPatch(typeof(Pickable))]
+        public static class PickablePatch
         {
 
+            [HarmonyPatch("Awake")]
             [HarmonyPostfix]
-            public static void Postfix(ZNetView ___m_nview, Pickable __instance)
+            public static void GatheringHookRPCs(ZNetView ___m_nview, Pickable __instance)
             {
                 __instance.RegisterSetMultiplierRPC();
             }
-        }
-
-        [HarmonyPatch(typeof(Pickable), "GetHoverText")]
-        public static class PickableTime
-        {
+            [HarmonyPatch("GetHoverText")]
             [HarmonyPostfix]
-            public static void Postfix(ref string __result, bool ___m_picked, ZNetView ___m_nview, int ___m_respawnTimeMinutes, Pickable __instance)
+            public static void PickableTime(ref string __result, bool ___m_picked, ZNetView ___m_nview, int ___m_respawnTimeMinutes, Pickable __instance)
             {
                 if (___m_picked && ___m_nview.GetZDO() != null)
                 {
@@ -144,43 +187,22 @@ namespace Pipakin.GatheringMod
                     }
                 }
             }
-        }
 
-        [HarmonyPatch(typeof(Pickable), "SetPicked")]
-        public static class FixPickableTime
-        {
-            public class PickState
-            {
-                public long picked_time;
-                public bool picked;
-            }
 
+            [HarmonyPatch("Interact")]
             [HarmonyPrefix]
-            public static void Prefix(ZNetView ___m_nview, bool ___m_picked, ref PickState __state)
+            public static void GardeningSkillIncrease(Humanoid character, bool ___m_picked)
             {
-                __state = new PickState();
-                __state.picked_time = ___m_nview.GetZDO().GetLong("picked_time", 0L);
-                __state.picked = ___m_picked;
-            }
-
-            [HarmonyPostfix]
-            public static void Postfix(ZNetView ___m_nview, bool ___m_picked, ref PickState __state)
-            {
-                //if we're not changing the state, don't change the pick time.
-                //Don't do anything if we're the client. Trust the server in that case.
-                if (__state != null && __state.picked == ___m_picked && ___m_nview.IsOwner())
+                //if I'm interacting and it's not picked, I'm gonna pick it!
+                if (!___m_picked)
                 {
-                    ___m_nview.GetZDO().Set("picked_time", __state.picked_time);
+                    //add some skillzz!
+                    character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
                 }
             }
-        }
-
-        [HarmonyPatch(typeof(Pickable), "Interact")]
-        [HarmonyBefore(new string[] { "com.github.johndowson.CropReplant" })]
-        public static class AddDropMultiplier
-        {
+            [HarmonyPatch("Interact")]
             [HarmonyPrefix]
-            public static void Prefix(Humanoid character, bool repeat, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
+            public static void AddDropMultiplier(Humanoid character, bool repeat, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
             {
                 if (!___m_nview.IsValid() || ___m_picked)
                 {
@@ -192,13 +214,9 @@ namespace Pipakin.GatheringMod
 
                 __instance.SetMultiplier(mult);
             }
-        }
-
-        [HarmonyPatch(typeof(Pickable), "Drop")]
-        public static class DropMultiply
-        {
+            [HarmonyPatch("Drop")]
             [HarmonyPrefix]
-            public static void Prefix(GameObject prefab, int offset, ref int stack, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
+            public static void DropMultiply(GameObject prefab, int offset, ref int stack, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
             {
                 if (!___m_nview.IsValid())
                 {
