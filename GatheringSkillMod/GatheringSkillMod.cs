@@ -3,8 +3,6 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using Pipakin.SkillInjectorMod;
 using System;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace Pipakin.GatheringMod
@@ -29,8 +27,14 @@ namespace Pipakin.GatheringMod
 
         void Awake()
         {
-            harmony.PatchAll(typeof(CRCompatability));
-
+            try
+            {
+                harmony.PatchAll(typeof(CRCompatability));
+            }
+            catch
+            {
+                Logger.LogInfo("Skipping CropReplant compatability patch");
+            }
             harmony.PatchAll(typeof(PickablePatch));
             harmony.PatchAll(typeof(FixPickableTime));
 
