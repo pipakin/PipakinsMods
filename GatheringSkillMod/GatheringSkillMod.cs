@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.1.0")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.2.0")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.github.johndowson.CropReplant", BepInDependency.DependencyFlags.SoftDependency)]
