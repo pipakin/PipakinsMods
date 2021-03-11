@@ -254,10 +254,13 @@ namespace Pipakin.GatheringMod
                 if(dropMode.Value == DropMode.Random)
                 {
                     mult = UnityEngine.Random.Range(1.0f, mult);
+                    mult += UnityEngine.Random.Range(0.0f, 1.0f) <= (mult - Math.Floor(mult)) ? 1.0f : 0.0f;
                 } else if (dropMode.Value == DropMode.PartialRandom)
                 {
                     mult += UnityEngine.Random.Range(0.0f, 1.0f) <= (mult - Math.Floor(mult)) ? 1.0f : 0.0f;
                 }
+
+                mult = (float)Math.Floor(mult);
 
                 Debug.Log("Actual calculated multiplier " + mult);
 
