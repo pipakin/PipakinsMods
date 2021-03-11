@@ -11,9 +11,17 @@ namespace Pipakin.GatheringMod
     [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.1.0")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.github.johndowson.CropReplant", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("com.pipakin.GatheringSkillMod");
+
+        enum DropMode
+        {
+            Linear,
+            Random,
+            PartialRandom
+        }
 
         private static ConfigEntry<float> configSkillIncrease;
 
@@ -21,13 +29,27 @@ namespace Pipakin.GatheringMod
         private static ConfigEntry<int> configDetailedEstimateLevel;
 
 
+        private static ConfigEntry<DropMode> dropMode;
         private static ConfigEntry<int> maxDropMultiplier;
 
-        
+
 
         void Awake()
         {
-            harmony.PatchAll();
+            try
+            {
+                harmony.PatchAll(typeof(CRCompatability));
+            }
+            catch
+            {
+                Logger.LogInfo("Skipping CropReplant compatability patch");
+            }
+            harmony.PatchAll(typeof(GardeningSkillIncrease));
+            harmony.PatchAll(typeof(GatheringHookRPCs));
+            harmony.PatchAll(typeof(GetHoverTextPatch));
+            harmony.PatchAll(typeof(FixPickableTime)); 
+            harmony.PatchAll(typeof(AddDropMultiplier));
+            harmony.PatchAll(typeof(DropMultiply));
 
             configSkillIncrease = Config.Bind("Progression",
                                            "LevelingIncrement",
@@ -45,6 +67,11 @@ namespace Pipakin.GatheringMod
                                            10,
                                            "Level at which to show detailed (to the minute) estimates");
 
+            dropMode = Config.Bind("Drops",
+                                           "Mode",
+                                           DropMode.Linear,
+                                           "Mode for increasing the drop rate. Valid values are Linear, Random, and PartialRandom");
+
             maxDropMultiplier = Config.Bind("Drops",
                                            "MaxMultiplier",
                                            4,
@@ -55,6 +82,22 @@ namespace Pipakin.GatheringMod
         }
         //hopefully this doesn't conflict.
         public const int SKILL_TYPE = 242;
+
+        [HarmonyPatch(typeof(CropReplant.PickableExt), "Replant")]
+        [HarmonyAfter(new string[] { "com.github.johndowson.CropReplant" })]
+        public static class CRCompatability
+        {
+            [HarmonyPrefix]
+            public static void Prefix(Pickable pickable, Player player)
+            {
+                //if I'm interacting and it's not picked, I'm gonna pick it!
+                if (!Traverse.Create(pickable).Field("m_picked").GetValue<bool>())
+                {
+                    //add some skillzz!
+                    player.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
+                }
+            }
+        }
 
         [HarmonyPatch(typeof(Pickable), "Interact")]
         [HarmonyBefore(new string[] { "com.github.johndowson.CropReplant" })]
@@ -86,7 +129,7 @@ namespace Pipakin.GatheringMod
         }
 
         [HarmonyPatch(typeof(Pickable), "GetHoverText")]
-        public static class PickableTime
+        public static class GetHoverTextPatch
         {
             [HarmonyPostfix]
             public static void Postfix(ref string __result, bool ___m_picked, ZNetView ___m_nview, int ___m_respawnTimeMinutes, Pickable __instance)
@@ -187,7 +230,7 @@ namespace Pipakin.GatheringMod
                     return;
                 }
 
-                var mult = 1.0f + character.GetSkillFactor((Skills.SkillType)SKILL_TYPE) * (float)maxDropMultiplier.Value;
+                var mult = 1.0f + character.GetSkillFactor((Skills.SkillType)SKILL_TYPE) * ((float)maxDropMultiplier.Value - 1.0f);
                 Debug.Log("Gathering multiplier set to " + mult);
 
                 __instance.SetMultiplier(mult);
@@ -207,6 +250,16 @@ namespace Pipakin.GatheringMod
 
                 var mult = __instance.GetMultiplier();
                 Debug.Log("Gathering multiplier read as " + mult);
+
+                if(dropMode.Value == DropMode.Random)
+                {
+                    mult = UnityEngine.Random.Range(1.0f, mult);
+                } else if (dropMode.Value == DropMode.PartialRandom)
+                {
+                    mult += UnityEngine.Random.Range(0.0f, 1.0f) <= (mult - Math.Floor(mult)) ? 1.0f : 0.0f;
+                }
+
+                Debug.Log("Actual calculated multiplier " + mult);
 
                 stack = (int)mult * stack;
                 Debug.Log("Gathering boosted stack size to " + stack);
