@@ -10,10 +10,9 @@ using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.2.0")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.2.1")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.github.johndowson.CropReplant", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("com.pipakin.GatheringSkillMod");
@@ -58,18 +57,10 @@ namespace Pipakin.GatheringMod
 
         void Awake()
         {
-            try
-            {
-                harmony.PatchAll(typeof(CRCompatability));
-            }
-            catch
-            {
-                Logger.LogInfo("Skipping CropReplant compatability patch");
-            }
             harmony.PatchAll(typeof(GardeningSkillIncrease));
             harmony.PatchAll(typeof(GatheringHookRPCs));
             harmony.PatchAll(typeof(GetHoverTextPatch));
-            harmony.PatchAll(typeof(FixPickableTime)); 
+            harmony.PatchAll(typeof(FixPickableTime));
             harmony.PatchAll(typeof(AddDropMultiplier));
             harmony.PatchAll(typeof(DropMultiply));
 
@@ -105,20 +96,9 @@ namespace Pipakin.GatheringMod
         //hopefully this doesn't conflict.
         public const int SKILL_TYPE = 242;
 
-        [HarmonyPatch(typeof(CropReplant.PickableExt), "Replant")]
-        [HarmonyAfter(new string[] { "com.github.johndowson.CropReplant" })]
-        public static class CRCompatability
+        public static void IncreaseSkill(Humanoid character)
         {
-            [HarmonyPrefix]
-            public static void Prefix(Pickable pickable, Player player)
-            {
-                //if I'm interacting and it's not picked, I'm gonna pick it!
-                if (!Traverse.Create(pickable).Field("m_picked").GetValue<bool>())
-                {
-                    //add some skillzz!
-                    player.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
-                }
-            }
+            character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
         }
 
         [HarmonyPatch(typeof(Pickable), "Interact")]
@@ -133,7 +113,7 @@ namespace Pipakin.GatheringMod
                 if (!___m_picked)
                 {
                     //add some skillzz!
-                    character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
+                    IncreaseSkill(character);
                 }
             }
         }

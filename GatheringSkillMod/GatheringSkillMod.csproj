@@ -43,7 +43,8 @@
     <Reference Include="BepInEx">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="CropReplant">
+    <Reference Include="CropReplant, Version=1.5.7733.7261, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CropReplant.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -67,6 +68,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CropReplantCompatibilityMod.cs" />
     <Compile Include="GatheringSkillMod.cs" />
     <Compile Include="Pickable_RPC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
