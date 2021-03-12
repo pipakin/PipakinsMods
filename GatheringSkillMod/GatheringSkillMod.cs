@@ -4,6 +4,8 @@ using HarmonyLib;
 using Pipakin.SkillInjectorMod;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace Pipakin.GatheringMod
@@ -32,6 +34,26 @@ namespace Pipakin.GatheringMod
         private static ConfigEntry<DropMode> dropMode;
         private static ConfigEntry<int> maxDropMultiplier;
 
+        private static Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
+
+        private static Sprite LoadCustomTexture()
+        {
+            string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string filepath = Path.Combine(directoryName, "gathering.png");
+            Texture2D texture2D = LoadTexture(filepath);
+            return Sprite.Create(texture2D, new Rect(0f, 0f, 32f, 32f), Vector2.zero);
+        }
+
+        private static Texture2D LoadTexture(string filepath)
+        {
+            if (cachedTextures.ContainsKey(filepath))
+            {
+                return cachedTextures[filepath];
+            }
+            Texture2D texture2D = new Texture2D(0, 0);
+            ImageConversion.LoadImage(texture2D, File.ReadAllBytes(filepath));
+            return texture2D;
+        }
 
 
         void Awake()
@@ -77,7 +99,7 @@ namespace Pipakin.GatheringMod
                                            4,
                                            "Maximum drop multiplier (at level 100). Minimum 1");
 
-            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Gathering", "Gathering berries and other items", 1.0f, null, Skills.SkillType.Unarmed);
+            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Gathering", "Gathering berries and other items", 1.0f, LoadCustomTexture());
 
         }
         //hopefully this doesn't conflict.
@@ -136,6 +158,11 @@ namespace Pipakin.GatheringMod
             {
                 if (___m_picked && ___m_nview.GetZDO() != null)
                 {
+                    if(__instance.name.ToLower().Contains("surt"))
+                    {
+                        return;
+                    }
+
                     long @long = ___m_nview.GetZDO().GetLong("picked_time", 0L);
                     DateTime dateTime = new DateTime(@long);
                     double mins = (ZNet.instance.GetTime() - dateTime).TotalMinutes;

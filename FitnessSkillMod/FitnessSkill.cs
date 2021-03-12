@@ -4,11 +4,13 @@ using HarmonyLib;
 using Pipakin.SkillInjectorMod;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace Pipakin.FitnessSkillMod
 {
-    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.1")]
+    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.2")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class FitnessSkill : BaseUnityPlugin
     {
@@ -20,6 +22,26 @@ namespace Pipakin.FitnessSkillMod
         private static ConfigEntry<float> baseStaminaRegen;
         private static ConfigEntry<float> baseStamina;
         private static ConfigEntry<float> skillGainIncrement;
+        private static Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
+
+        private static Sprite LoadCustomTexture()
+        {
+            string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string filepath = Path.Combine(directoryName, "fitness.png");
+            Texture2D texture2D = LoadTexture(filepath);
+            return Sprite.Create(texture2D, new Rect(0f, 0f, 32f, 32f), Vector2.zero);
+        }
+
+        private static Texture2D LoadTexture(string filepath)
+        {
+            if (cachedTextures.ContainsKey(filepath))
+            {
+                return cachedTextures[filepath];
+            }
+            Texture2D texture2D = new Texture2D(0, 0);
+            ImageConversion.LoadImage(texture2D, File.ReadAllBytes(filepath));
+            return texture2D;
+        }
 
         //hopefully this doesn't conflict.
         public const int SKILL_TYPE = 243;
@@ -56,7 +78,7 @@ namespace Pipakin.FitnessSkillMod
                                            "Amount of stamina used before any skill is gained");
 
 
-            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Fitness", "Affects maximum stamina level", 1.0f, null, Skills.SkillType.Run);
+            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Fitness", "Affects maximum stamina level", 1.0f, LoadCustomTexture());
         }
 
         [HarmonyPatch(typeof(Player), "SetMaxStamina")]
