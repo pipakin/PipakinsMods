@@ -33,7 +33,7 @@ namespace Pipakin.GatheringMod
                 if (!Traverse.Create(pickable).Field("m_picked").GetValue<bool>())
                 {
                     //add some skillzz!
-                    GatheringSkillMod.IncreaseSkill(player);
+                    GatheringSkillMod.IncreaseSkill(player, pickable.name);
                 }
             }
         }

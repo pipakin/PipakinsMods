@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Pipakin.FitnessSkillMod
 {
-    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.2")]
+    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.3")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class FitnessSkill : BaseUnityPlugin
     {
@@ -28,8 +28,16 @@ namespace Pipakin.FitnessSkillMod
         {
             string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string filepath = Path.Combine(directoryName, "fitness.png");
-            Texture2D texture2D = LoadTexture(filepath);
-            return Sprite.Create(texture2D, new Rect(0f, 0f, 32f, 32f), Vector2.zero);
+            if (File.Exists(filepath))
+            {
+                Texture2D texture2D = LoadTexture(filepath);
+                return Sprite.Create(texture2D, new Rect(0f, 0f, 32f, 32f), Vector2.zero);
+            }
+            else
+            {
+                Debug.LogError("Unable to load skill icon! Make sure you place the fitness.png file in the plugins directory!");
+                return null;
+            }
         }
 
         private static Texture2D LoadTexture(string filepath)
@@ -78,7 +86,7 @@ namespace Pipakin.FitnessSkillMod
                                            "Amount of stamina used before any skill is gained");
 
 
-            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Fitness", "Affects maximum stamina level", 1.0f, LoadCustomTexture());
+            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Fitness", "Affects maximum stamina level", 1.0f, LoadCustomTexture(), Skills.SkillType.Run);
         }
 
         [HarmonyPatch(typeof(Player), "SetMaxStamina")]

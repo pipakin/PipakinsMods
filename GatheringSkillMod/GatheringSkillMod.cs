@@ -5,12 +5,13 @@ using Pipakin.SkillInjectorMod;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.2.1")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "1.3.0")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
@@ -25,11 +26,14 @@ namespace Pipakin.GatheringMod
         }
 
         private static ConfigEntry<float> configSkillIncrease;
+        private static ConfigEntry<string> ignorePickables;
 
+        private static ConfigEntry<bool> estimatesEnabled;
         private static ConfigEntry<int> configSimpleEstimateLevel;
         private static ConfigEntry<int> configDetailedEstimateLevel;
 
 
+        private static ConfigEntry<bool> dropsEnabled;
         private static ConfigEntry<DropMode> dropMode;
         private static ConfigEntry<int> maxDropMultiplier;
 
@@ -39,8 +43,16 @@ namespace Pipakin.GatheringMod
         {
             string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string filepath = Path.Combine(directoryName, "gathering.png");
-            Texture2D texture2D = LoadTexture(filepath);
-            return Sprite.Create(texture2D, new Rect(0f, 0f, 32f, 32f), Vector2.zero);
+            if (File.Exists(filepath))
+            {
+                Texture2D texture2D = LoadTexture(filepath);
+                return Sprite.Create(texture2D, new Rect(0f, 0f, 32f, 32f), Vector2.zero);
+            } 
+            else
+            {
+                Debug.LogError("Unable to load skill icon! Make sure you place the gathering.png file in the plugins directory!");
+                return null;
+            }
         }
 
         private static Texture2D LoadTexture(string filepath)
@@ -69,16 +81,30 @@ namespace Pipakin.GatheringMod
                                            1.0f,
                                            "Increment to increase skill per interaction");
 
+            ignorePickables = Config.Bind("Progression",
+                                           "IgnorePickables",
+                                           "",
+                                           "Pickables to ignore. Comma seperated list of object names, e.g. Carrot,CarrotSeeds");
+
+            estimatesEnabled = Config.Bind("TimeEstimate",
+                                           "Enabled",
+                                           true,
+                                           "Enable showing estimates. Disable this if you have another mod you want to use estimates from.");
+
             configSimpleEstimateLevel = Config.Bind("TimeEstimate",
                                            "Simple",
                                            1,
                                            "Level at which to show simple estimates");
 
-
             configDetailedEstimateLevel = Config.Bind("TimeEstimate",
                                            "Detailed",
                                            10,
                                            "Level at which to show detailed (to the minute) estimates");
+
+            dropsEnabled = Config.Bind("Drops",
+                                           "Enabled",
+                                           true,
+                                           "Enable changing drop amounts.");
 
             dropMode = Config.Bind("Drops",
                                            "Mode",
@@ -90,15 +116,46 @@ namespace Pipakin.GatheringMod
                                            4,
                                            "Maximum drop multiplier (at level 100). Minimum 1");
 
-            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Gathering", "Gathering berries and other items", 1.0f, LoadCustomTexture());
+            SkillInjector.RegisterNewSkill(SKILL_TYPE, "Gathering", "Gathering berries and other items", 1.0f, LoadCustomTexture(), Skills.SkillType.Unarmed);
 
+        }
+        static bool IgnorePickable(string name)
+        {
+            var ignored = ignorePickables.Value?.Split(',');
+            if(ignored != null)
+            {
+                foreach(var i in ignored)
+                {
+                    if(i.Replace("(Clone)", "") == name.Replace("(Clone)", ""))
+                    {
+                        return true;
+                    }
+                }
+
+            }
+            return false;
         }
         //hopefully this doesn't conflict.
         public const int SKILL_TYPE = 242;
 
-        public static void IncreaseSkill(Humanoid character)
+        public static void IncreaseSkill(Character character, string pickableName)
         {
-            character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
+            try
+            {
+                if (IgnorePickable(pickableName))
+                {
+                    Debug.Log("Ignoring pick of: " + pickableName);
+                }
+                else
+                {
+                    Debug.Log("Raising skill because of picking: " + pickableName);
+                    character.RaiseSkill((Skills.SkillType)SKILL_TYPE, configSkillIncrease.Value);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Error raising gathering skill for character " + character.GetHoverName() + ": " + e.ToString());
+            } 
         }
 
         [HarmonyPatch(typeof(Pickable), "Interact")]
@@ -107,13 +164,13 @@ namespace Pipakin.GatheringMod
         {
 
             [HarmonyPrefix]
-            public static void Prefix(Humanoid character, bool ___m_picked)
+            public static void Prefix(Humanoid character, bool ___m_picked, Pickable __instance)
             {
                 //if I'm interacting and it's not picked, I'm gonna pick it!
                 if (!___m_picked)
                 {
                     //add some skillzz!
-                    IncreaseSkill(character);
+                    IncreaseSkill(character, __instance.name);
                 }
             }
         }
@@ -136,7 +193,7 @@ namespace Pipakin.GatheringMod
             [HarmonyPostfix]
             public static void Postfix(ref string __result, bool ___m_picked, ZNetView ___m_nview, int ___m_respawnTimeMinutes, Pickable __instance)
             {
-                if (___m_picked && ___m_nview.GetZDO() != null)
+                if (___m_picked && ___m_nview.GetZDO() != null && estimatesEnabled.Value)
                 {
                     if(__instance.name.ToLower().Contains("surt"))
                     {
@@ -232,7 +289,7 @@ namespace Pipakin.GatheringMod
             [HarmonyPrefix]
             public static void Prefix(Humanoid character, bool repeat, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
             {
-                if (!___m_nview.IsValid() || ___m_picked)
+                if (!___m_nview.IsValid() || ___m_picked || !dropsEnabled.Value || IgnorePickable(__instance.name))
                 {
                     return;
                 }
@@ -250,7 +307,7 @@ namespace Pipakin.GatheringMod
             [HarmonyPrefix]
             public static void Prefix(GameObject prefab, int offset, ref int stack, ZNetView ___m_nview, bool ___m_picked, Pickable __instance)
             {
-                if (!___m_nview.IsValid())
+                if (!___m_nview.IsValid() || !dropsEnabled.Value || IgnorePickable(__instance.name))
                 {
                     return;
                 }
