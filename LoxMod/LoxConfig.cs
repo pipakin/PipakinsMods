@@ -1,19 +1,22 @@
 ﻿using BepInEx.Configuration;
-using ModConfigEnforcer;
+using HarmonyLib;
+using Pipakin.LoxMod.Config;
+using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Pipakin.LoxMod
 {
     public class LoxConfig
 	{
-		public ConfigVariable<float> configLoxlingScale;
-		public ConfigVariable<string> configLoxlingName;
-		public ConfigVariable<float> configLoxlingGrowupTime;
-		public ConfigVariable<float> configLoxProcreationTime;
-		public ConfigVariable<float> configLoxProcreationDistance;
-		public ConfigVariable<float> configLoxProcreationLimitDistance;
-		private ConfigVariable<int> configLoxProcreationLovePoints;
-		private ConfigVariable<int> configLoxProcreationCreatureLimit;
+		public GenericConfigVariable<float> configLoxlingScale;
+		public GenericConfigVariable<string> configLoxlingName;
+		public GenericConfigVariable<float> configLoxlingGrowupTime;
+		public GenericConfigVariable<float> configLoxProcreationTime;
+		public GenericConfigVariable<float> configLoxProcreationDistance;
+		public GenericConfigVariable<float> configLoxProcreationLimitDistance;
+		private GenericConfigVariable<int> configLoxProcreationLovePoints;
+		private GenericConfigVariable<int> configLoxProcreationCreatureLimit;
 
 		public Vector3 LoxlingScale
 		{
@@ -58,16 +61,27 @@ namespace Pipakin.LoxMod
 		{
 			config.Bind<int>("General", "NexusID", 546, "Nexus mod ID for updates");
 
-			ConfigManager.RegisterMod(id, config);
+			var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "ModConfigEnforcer");
 
-			configLoxlingScale = ConfigManager.RegisterModConfigVariable<float>(id, "Scale", 0.2f, "Baby", "Scale to display baby loxes at.", false);
-			configLoxlingName = ConfigManager.RegisterModConfigVariable<string>(id, "Name", "Loxling", "Baby", "Name of baby loxes", true);
-			configLoxlingGrowupTime = ConfigManager.RegisterModConfigVariable<float>(id, "GrowupTime", 7200f, "Baby", "Number of seconds for baby to grow up", false);
-			configLoxProcreationTime = ConfigManager.RegisterModConfigVariable<float>(id, "Time", 300f, "Procreation", "Number of seconds for parent to be pregnant", false);
-			configLoxProcreationDistance = ConfigManager.RegisterModConfigVariable<float>(id, "Distance", 40f, "Procreation", "Distance to find procreation partner", false);
-			configLoxProcreationLimitDistance = ConfigManager.RegisterModConfigVariable<float>(id, "LimitDistance", 160f, "Procreation", "Distance to check for limit", false);
-			configLoxProcreationLovePoints = ConfigManager.RegisterModConfigVariable<int>(id, "LovePoints", 4, "Procreation", "Number of interactions required to become pregnant", false);
-			configLoxProcreationCreatureLimit = ConfigManager.RegisterModConfigVariable<int>(id, "LimitCount", 6, "Procreation", "Max number of creatures in range", false);
+			if (assembly != null)
+			{
+				Debug.Log("[LoxMod] Mod Config Enforcer detected, registering mod...");
+				var configManagerType = assembly.GetType("ModConfigEnforcer.ConfigManager");
+				Traverse.Create(configManagerType).Method("RegisterMod", id, config).GetValue(id, config);
+			}
+			else
+			{
+				Debug.Log("Mod Config Enforcer not detected.");
+			}
+
+			configLoxlingScale = new GenericConfigVariable<float>(assembly, config, id, "Scale", 0.2f, "Baby", "Scale to display baby loxes at.", false);
+			configLoxlingName = new GenericConfigVariable<string>(assembly, config, id, "Name", "Loxling", "Baby", "Name of baby loxes", true);
+			configLoxlingGrowupTime = new GenericConfigVariable<float>(assembly, config, id, "GrowupTime", 7200f, "Baby", "Number of seconds for baby to grow up", false);
+			configLoxProcreationTime = new GenericConfigVariable<float>(assembly, config, id, "Time", 300f, "Procreation", "Number of seconds for parent to be pregnant", false);
+			configLoxProcreationDistance = new GenericConfigVariable<float>(assembly, config, id, "Distance", 40f, "Procreation", "Distance to find procreation partner", false);
+			configLoxProcreationLimitDistance = new GenericConfigVariable<float>(assembly, config, id, "LimitDistance", 160f, "Procreation", "Distance to check for limit", false);
+			configLoxProcreationLovePoints = new GenericConfigVariable<int>(assembly, config, id, "LovePoints", 4, "Procreation", "Number of interactions required to become pregnant", false);
+			configLoxProcreationCreatureLimit = new GenericConfigVariable<int>(assembly, config, id, "LimitCount", 6, "Procreation", "Max number of creatures in range", false);
 
 		}
 	}

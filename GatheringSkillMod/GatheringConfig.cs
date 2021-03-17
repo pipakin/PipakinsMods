@@ -1,82 +1,111 @@
 ﻿using BepInEx.Configuration;
-using ModConfigEnforcer;
+using HarmonyLib;
+using Pipakin.GatheringMod.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
     class GatheringConfig
     {
-        private ConfigVariable<float> configSkillIncrease;
-        private ConfigVariable<string> ignorePickables;
+        private GenericConfigVariable<float> configSkillIncrease;
+        private GenericConfigVariable<string> ignorePickables;
 
-        private ConfigVariable<bool> estimatesEnabled;
-        private ConfigVariable<int> configSimpleEstimateLevel;
-        private ConfigVariable<int> configDetailedEstimateLevel;
+        private GenericConfigVariable<bool> estimatesEnabled;
+        private GenericConfigVariable<int> configSimpleEstimateLevel;
+        private GenericConfigVariable<int> configDetailedEstimateLevel;
 
 
-        private ConfigVariable<bool> dropsEnabled;
-        private ConfigVariable<string> dropMode;
-        private ConfigVariable<int> maxDropMultiplier;
+        private GenericConfigVariable<bool> dropsEnabled;
+        private GenericConfigVariable<string> dropMode;
+        private GenericConfigVariable<int> maxDropMultiplier;
 
 
         public void InitConfig(string id, ConfigFile config)
         {
             config.Bind<int>("General", "NexusID", 342, "Nexus mod ID for updates");
 
-            ConfigManager.RegisterMod(id, config);
+            var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "ModConfigEnforcer");
 
-            configSkillIncrease = ConfigManager.RegisterModConfigVariable(id,
+            if(assembly != null)
+            {
+                Debug.Log("[GatheringMod] Mod Config Enforcer detected, registering mod...");
+                var configManagerType = assembly.GetType("ModConfigEnforcer.ConfigManager");
+                Traverse.Create(configManagerType).Method("RegisterMod", id, config).GetValue(id, config);
+            }
+            else
+            {
+                Debug.Log("Mod Config Enforcer not detected.");
+            }
+
+            configSkillIncrease = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "LevelingIncrement",
                                            1.0f,
                                            "Progression",
                                            "Increment to increase skill per interaction",
                                            false);
 
-            ignorePickables = ConfigManager.RegisterModConfigVariable(id,
+            ignorePickables = new GenericConfigVariable<string>(assembly,
+                                           config,
+                                           id,
                                            "IgnorePickables",
                                            "",
                                            "Progression",
                                            "Pickables to ignore. Comma seperated list of object names, e.g. Pickable_Carrot,Pickable_CarrotSeeds",
                                            false);
 
-            estimatesEnabled = ConfigManager.RegisterModConfigVariable(id,
+            estimatesEnabled = new GenericConfigVariable<bool>(assembly,
+                                           config,
+                                           id,
                                            "Enabled",
                                            true,
                                            "TimeEstimate",
                                            "Enable showing estimates. Disable this if you have another mod you want to use estimates from.",
                                            false);
 
-            configSimpleEstimateLevel = ConfigManager.RegisterModConfigVariable(id,
+            configSimpleEstimateLevel = new GenericConfigVariable<int>(assembly,
+                                           config,
+                                           id,
                                            "Simple",
                                            1,
                                            "TimeEstimate",
                                            "Level at which to show simple estimates",
                                            false);
 
-            configDetailedEstimateLevel = ConfigManager.RegisterModConfigVariable(id,
+            configDetailedEstimateLevel = new GenericConfigVariable<int>(assembly,
+                                           config,
+                                           id,
                                            "Detailed",
                                            10,
                                            "TimeEstimate",
                                            "Level at which to show detailed (to the minute) estimates",
                                            false);
 
-            dropsEnabled = ConfigManager.RegisterModConfigVariable(id,
+            dropsEnabled = new GenericConfigVariable<bool>(assembly,
+                                           config,
+                                           id,
                                            "Enabled",
                                            true,
                                            "Drops",
                                            "Enable changing drop amounts.",
                                            false);
 
-            dropMode = ConfigManager.RegisterModConfigVariable(id,
+            dropMode = new GenericConfigVariable<string>(assembly,
+                                           config,
+                                           id,
                                            "Mode",
                                            "Linear",
                                            "Drops",
                                            "Mode for increasing the drop rate. Valid values are Linear, Random, and PartialRandom",
                                            false);
 
-            maxDropMultiplier = ConfigManager.RegisterModConfigVariable(id,
+            maxDropMultiplier = new GenericConfigVariable<int>(assembly,
+                                           config,
+                                           id,
                                            "MaxMultiplier",
                                            4,
                                            "Drops",

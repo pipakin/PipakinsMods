@@ -11,9 +11,9 @@ using UnityEngine;
 
 namespace Pipakin.GatheringMod
 {
-    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "2.0.0")]
+    [BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "2.0.1")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
-    [BepInDependency("pfhoenix.modconfigenforcer")]
+    [BepInDependency("pfhoenix.modconfigenforcer", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.pipakin.PickableTimeFixMod", BepInDependency.DependencyFlags.SoftDependency)]
     public class GatheringSkillMod : BaseUnityPlugin
     {

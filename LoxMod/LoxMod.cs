@@ -9,12 +9,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using ModConfigEnforcer;
 
 namespace Pipakin.LoxMod
 {
 	[BepInPlugin("com.pipakin.LoxMod", "LoxMod", "2.0.0")]
-	[BepInDependency("pfhoenix.modconfigenforcer")]
+	[BepInDependency("pfhoenix.modconfigenforcer", BepInDependency.DependencyFlags.SoftDependency)]
 	public class LoxMod : BaseUnityPlugin
 	{
 		const string MOD_ID = "com.pipakin.LoxMod";

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Pipakin.SkillInjectorMod
 {
-    [BepInPlugin("com.pipakin.SkillInjectorMod", "SkillInjectorMod", "1.0.2")]
+    [BepInPlugin("com.pipakin.SkillInjectorMod", "SkillInjectorMod", "1.1.1")]
     public class SkillInjector : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("com.pipakin.SkillInjectorMod");

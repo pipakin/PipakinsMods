@@ -47,9 +47,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CropReplant.dll</HintPath>
     </Reference>
-    <Reference Include="ModConfigEnforcer">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\ModConfigEnforcer.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -71,6 +68,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\GenericConfigVariable.cs" />
     <Compile Include="CropReplantCompatibilityMod.cs" />
     <Compile Include="GatheringConfig.cs" />
     <Compile Include="GatheringSkillMod.cs" />
@@ -84,6 +82,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="manifest.json" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

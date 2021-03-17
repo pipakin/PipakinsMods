@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Pipakin.FitnessSkillMod
 {
     [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "2.0.0")]
-    [BepInDependency("pfhoenix.modconfigenforcer")]
+    [BepInDependency("pfhoenix.modconfigenforcer", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class FitnessSkill : BaseUnityPlugin
     {

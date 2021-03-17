@@ -1,16 +1,20 @@
 ﻿using BepInEx.Configuration;
-using ModConfigEnforcer;
+using HarmonyLib;
+using Pipakin.FitnessSkillMod.Config;
+using System;
+using System.Linq;
+using UnityEngine;
 
 namespace Pipakin.FitnessSkillMod
 {
     public class FitnessConfig
     {
-        private ConfigVariable<float> configSkillIncrease;
-        private ConfigVariable<float> maxStaminaMultiplier;
-        private ConfigVariable<float> regenStaminaMultiplier;
-        private ConfigVariable<float> baseStaminaRegen;
-        private ConfigVariable<float> baseStamina;
-        private ConfigVariable<float> skillGainIncrement;
+        private GenericConfigVariable<float> configSkillIncrease;
+        private GenericConfigVariable<float> maxStaminaMultiplier;
+        private GenericConfigVariable<float> regenStaminaMultiplier;
+        private GenericConfigVariable<float> baseStaminaRegen;
+        private GenericConfigVariable<float> baseStamina;
+        private GenericConfigVariable<float> skillGainIncrement;
 
         public float SkillIncrease
         {
@@ -46,41 +50,64 @@ namespace Pipakin.FitnessSkillMod
         {
             config.Bind<int>("General", "NexusID", 388, "Nexus mod ID for updates");
 
-            ConfigManager.RegisterMod(id, config);
+            var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "ModConfigEnforcer");
 
-            configSkillIncrease = ConfigManager.RegisterModConfigVariable<float>(id, 
+            if (assembly != null)
+            {
+                Debug.Log("[FitnessMod] Mod Config Enforcer detected, registering mod...");
+                var configManagerType = assembly.GetType("ModConfigEnforcer.ConfigManager");
+                Traverse.Create(configManagerType).Method("RegisterMod", id, config).GetValue(id, config);
+            }
+            else
+            {
+                Debug.Log("Mod Config Enforcer not detected.");
+            }
+
+            configSkillIncrease = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "LevelingIncrement",
                                            1.0f,
                                            "Progression",
                                            "Increment to increase skill per use of a full bar of stamina",
                                            true);
 
-            baseStamina = ConfigManager.RegisterModConfigVariable<float>(id,
+            baseStamina = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "BaseMaximum",
                                            75f,
                                            "Stamina",
                                            "Base Max Stamina. The default is 75 which is the same as the umodded game",
                                            true);
-            maxStaminaMultiplier = ConfigManager.RegisterModConfigVariable<float>(id,
+            maxStaminaMultiplier = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "MaxMultiplier",
                                            1.5f,
                                            "Stamina",
                                            "Maximum stamina multiplier (at level 100). Minimum 1",
                                            true);
-            baseStaminaRegen = ConfigManager.RegisterModConfigVariable<float>(id,
+            baseStaminaRegen = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "BaseRegen",
                                            5f,
                                            "Stamina",
                                            "Base Regen. The default is 5 which is the same as the umodded game",
                                            true);
-            regenStaminaMultiplier = ConfigManager.RegisterModConfigVariable<float>(id,
+            regenStaminaMultiplier = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "RegenMultiplier",
                                            1.5f,
                                            "Stamina",
                                            "Stamina regen multiplier (at level 100). Minimum 1",
                                            true);
 
-            skillGainIncrement = ConfigManager.RegisterModConfigVariable<float>(id,
+            skillGainIncrement = new GenericConfigVariable<float>(assembly,
+                                           config,
+                                           id,
                                            "GainIncrement",
                                            25f,
                                            "Stamina",

@@ -62,5 +62,21 @@
     <Compile Include="SkillInjectorMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="README.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>powershell Compress-Archive -Path '$(TargetDir)SkillInjector.dll', '$(TargetDir)icon.png', '$(TargetDir)manifest.json', '$(TargetDir)README.md' -DestinationPath '$(SolutionDir)PublishOutput\SkillInjector.zip' -Force</PostBuildEvent>
+  </PropertyGroup>
 </Project>
