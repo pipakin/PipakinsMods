@@ -39,7 +39,7 @@ namespace Pipakin.LoxMod
                 return;
 
             nview.GetZDO().Set("loxmod_isloxling", true);
-            instance.transform.localScale = LoxMod.LoxlingScale;
+            instance.transform.localScale = LoxMod.loxConfig.LoxlingScale;
             instance.GetComponent<CharacterDrop>().SetDropsEnabled(false);
 
             var component = instance.GetComponent<Growup>();
@@ -48,7 +48,7 @@ namespace Pipakin.LoxMod
                 component = instance.gameObject.AddComponent<Growup>();
             }
             component.m_grownPrefab = ZNetScene.instance.GetPrefab("Lox");
-            component.m_growTime = LoxMod.LoxlingGrowupTime;
+            component.m_growTime = LoxMod.loxConfig.LoxlingGrowupTime;
 
             List<EffectList.EffectData> toRemove = new List<EffectList.EffectData>();
 

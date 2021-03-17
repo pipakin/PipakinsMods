@@ -9,73 +9,22 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using ModConfigEnforcer;
 
 namespace Pipakin.LoxMod
 {
-	[BepInPlugin("com.pipakin.LoxMod", "LoxMod", "1.0.0")]
+	[BepInPlugin("com.pipakin.LoxMod", "LoxMod", "2.0.0")]
+	[BepInDependency("pfhoenix.modconfigenforcer")]
 	public class LoxMod : BaseUnityPlugin
 	{
-		private readonly Harmony harmony = new Harmony("com.pipakin.LoxMod");
+		const string MOD_ID = "com.pipakin.LoxMod";
+		private readonly Harmony harmony = new Harmony(MOD_ID);
 
-
-		public static ConfigEntry<float> configLoxlingScale;
-		public static ConfigEntry<string> configLoxlingName;
-		public static ConfigEntry<float> configLoxlingGrowupTime;
-		public static ConfigEntry<float> configLoxProcreationTime;
-		public static ConfigEntry<float> configLoxProcreationDistance;
-		public static ConfigEntry<float> configLoxProcreationLimitDistance;
-		private static ConfigEntry<int> configLoxProcreationLovePoints;
-		private static ConfigEntry<int> configLoxProcreationCreatureLimit;
-
-		public static Vector3 LoxlingScale
-		{
-			get { return new Vector3(configLoxlingScale?.Value ?? 0.2f, configLoxlingScale?.Value ?? 0.2f, configLoxlingScale?.Value ?? 0.2f); }
-		}
-
-		public static string LoxlingName
-		{
-			get { return configLoxlingName?.Value ?? "Loxling"; }
-		}
-
-		public static float LoxlingGrowupTime
-        {
-			get { return configLoxlingGrowupTime?.Value ?? 7200f; }
-        }
-
-		public static float LoxProcreationTime
-        {
-			get { return configLoxProcreationTime?.Value ?? 300f; }
-        }
-
-		public static float LoxProcreationDistance
-        {
-			get { return configLoxProcreationDistance?.Value ?? 40f; }
-		}
-
-		public static float LoxProcreationLimitDistance
-		{
-			get { return configLoxProcreationLimitDistance?.Value ?? 160f; }
-		}
-		private static int LoxProcreationLovePoints
-        {
-			get { return configLoxProcreationLovePoints?.Value ?? 4; }
-        }
-
-		private static int LoxProcreationCreatureLimit
-        {
-			get { return configLoxProcreationCreatureLimit?.Value ?? 6; }
-        }
+		public static LoxConfig loxConfig = new LoxConfig();
 
 		void Awake()
-        {
-			configLoxlingScale = Config.Bind("Baby", "Scale", 0.2f, "Scale to display baby loxes at.");
-			configLoxlingName = Config.Bind("Baby", "Name", "Loxling", "Name of baby loxes");
-			configLoxlingGrowupTime = Config.Bind("Baby", "GrowupTime", 7200f, "Number of seconds for baby to grow up");
-			configLoxProcreationTime = Config.Bind("Procreation", "Time", 300f, "Number of seconds for parent to be pregnant");
-			configLoxProcreationDistance = Config.Bind("Procreation", "Distance", 40f, "Distance to find procreation partner");
-			configLoxProcreationLimitDistance = Config.Bind("Procreation", "LimitDistance", 160f, "Distance to check for limit");
-			configLoxProcreationLovePoints = Config.Bind("Procreation", "LovePoints", 4, "Number of interactions required to become pregnant");
-			configLoxProcreationCreatureLimit = Config.Bind("Procreation", "LimitCount", 6, "Max number of creatures in range");
+		{
+			loxConfig.InitConfig(MOD_ID, Config);
 
 			harmony.PatchAll(typeof(Character_Awake_Hooks));
 			harmony.PatchAll(typeof(Character_GetHoverName_Hooks));
@@ -106,7 +55,7 @@ namespace Pipakin.LoxMod
 			{
 				if(__instance.IsLox() && __instance.IsLoxling())
                 {
-					__result = LoxlingName;
+					__result = loxConfig.LoxlingName;
                 }
 			}
 		}
@@ -131,11 +80,11 @@ namespace Pipakin.LoxMod
 						proc = __instance.gameObject.AddComponent<Procreation>();
 					}
 					proc.m_offspring = __instance.gameObject;
-					proc.m_pregnancyDuration = LoxProcreationTime;
-					proc.m_totalCheckRange = LoxProcreationLimitDistance;
-					proc.m_partnerCheckRange = LoxProcreationDistance;
-					proc.m_requiredLovePoints = LoxProcreationLovePoints;
-					proc.m_maxCreatures = LoxProcreationCreatureLimit;
+					proc.m_pregnancyDuration = loxConfig.LoxProcreationTime;
+					proc.m_totalCheckRange = loxConfig.LoxProcreationLimitDistance;
+					proc.m_partnerCheckRange = loxConfig.LoxProcreationDistance;
+					proc.m_requiredLovePoints = loxConfig.LoxProcreationLovePoints;
+					proc.m_maxCreatures = loxConfig.LoxProcreationCreatureLimit;
 
 					var comm = __instance.GetComponent<Tameable>();
 					comm.m_commandable = true;
@@ -194,7 +143,7 @@ namespace Pipakin.LoxMod
 					{
 						if(___m_character.IsLoxling())
                         {
-							Debug.LogError("No breeding for loxlings");
+							//Debug.LogError("No breeding for loxlings");
 							return false;
                         }
 						if (UnityEngine.Random.value <= __instance.m_pregnancyChance || ___m_baseAI.IsAlerted() || ___m_tameable.IsHungry())

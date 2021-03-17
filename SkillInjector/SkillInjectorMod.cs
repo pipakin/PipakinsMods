@@ -13,6 +13,8 @@ namespace Pipakin.SkillInjectorMod
 
         void Awake()
         {
+            Config.Bind<int>("General", "NexusID", 341, "Nexus mod ID for updates");
+
             harmony.PatchAll();
         }
         class SkillInfo

@@ -10,18 +10,15 @@ using UnityEngine;
 
 namespace Pipakin.FitnessSkillMod
 {
-    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "1.0.3")]
+    [BepInPlugin("com.pipakin.FitnessSkillMod", "FitnessSkillMod", "2.0.0")]
+    [BepInDependency("pfhoenix.modconfigenforcer")]
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class FitnessSkill : BaseUnityPlugin
     {
-        private readonly Harmony harmony = new Harmony("com.pipakin.GatheringSkillMod");
+        const string MOD_ID = "com.pipakin.GatheringSkillMod";
+        private readonly Harmony harmony = new Harmony(MOD_ID);
 
-        private static ConfigEntry<float> configSkillIncrease;
-        private static ConfigEntry<float> maxStaminaMultiplier;
-        private static ConfigEntry<float> regenStaminaMultiplier;
-        private static ConfigEntry<float> baseStaminaRegen;
-        private static ConfigEntry<float> baseStamina;
-        private static ConfigEntry<float> skillGainIncrement;
+        private static FitnessConfig fitnessConfig = new FitnessConfig();
         private static Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
 
         private static Sprite LoadCustomTexture()
@@ -56,35 +53,11 @@ namespace Pipakin.FitnessSkillMod
 
         void Awake()
         {
-            harmony.PatchAll();
+            fitnessConfig.InitConfig(MOD_ID, Config);
 
-            configSkillIncrease = Config.Bind("Progression",
-                                           "LevelingIncrement",
-                                           1.0f,
-                                           "Increment to increase skill per use of a full bar of stamina");
-
-            baseStamina = Config.Bind("Stamina",
-                                           "BaseMaximum",
-                                           75f,
-                                           "Base Max Stamina. The default is 75 which is the same as the umodded game");
-            maxStaminaMultiplier = Config.Bind("Stamina",
-                                           "MaxMultiplier",
-                                           1.5f,
-                                           "Maximum stamina multiplier (at level 100). Minimum 1");
-            baseStaminaRegen = Config.Bind("Stamina",
-                                           "BaseRegen",
-                                           5f,
-                                           "Base Regen. The default is 5 which is the same as the umodded game");
-            regenStaminaMultiplier = Config.Bind("Stamina",
-                                           "RegenMultiplier",
-                                           1.5f,
-                                           "Stamina regen multiplier (at level 100). Minimum 1");
-
-            skillGainIncrement = Config.Bind("Stamina",
-                                           "GainIncrement",
-                                           25f,
-                                           "Amount of stamina used before any skill is gained");
-
+            harmony.PatchAll(typeof(ApplyFitnessEffects));
+            harmony.PatchAll(typeof(ApplyFitnessRegen));
+            harmony.PatchAll(typeof(IncreaseFitnessSkill));
 
             SkillInjector.RegisterNewSkill(SKILL_TYPE, "Fitness", "Affects maximum stamina level", 1.0f, LoadCustomTexture(), Skills.SkillType.Run);
         }
@@ -101,9 +74,9 @@ namespace Pipakin.FitnessSkillMod
                     //adjust the amount by the multiplier
                     var factor = __instance.GetSkillFactor((Skills.SkillType)SKILL_TYPE);
 
-                    var amount = (float)Math.Ceiling(factor * (maxStaminaMultiplier.Value - 1.0f) * baseStamina.Value);
+                    var amount = (float)Math.Ceiling(factor * (fitnessConfig.MaxStaminaMultiplier - 1.0f) * fitnessConfig.BaseStamina);
 
-                    stamina += amount + baseStamina.Value - 75f; //offset from base of 75.
+                    stamina += amount + fitnessConfig.BaseStamina - 75f; //offset from base of 75.
                 } catch(Exception e)
                 {
                     Debug.LogError("Error adusting base stamina: " + e.ToString());
@@ -122,7 +95,7 @@ namespace Pipakin.FitnessSkillMod
                 {
                     //adjust the amount by the multiplier
                     var factor = __instance.GetSkillFactor((Skills.SkillType)SKILL_TYPE);
-                    var amount = (float)Math.Ceiling((factor * (regenStaminaMultiplier.Value - 1.0f) + 1.0f) * baseStaminaRegen.Value);
+                    var amount = (float)Math.Ceiling((factor * (fitnessConfig.RegenStaminaMultiplier - 1.0f) + 1.0f) * fitnessConfig.BaseStaminaRegen);
 
                     ___m_staminaRegen = amount;
                 }
@@ -146,10 +119,10 @@ namespace Pipakin.FitnessSkillMod
                     //adjust the amount by the multiplier
                     progress += v;
 
-                    if (progress > skillGainIncrement.Value)
+                    if (progress > fitnessConfig.SkillGainIncrement)
                     {
                         var ratio = progress / __instance.GetMaxStamina();
-                        __instance.RaiseSkill((Skills.SkillType)SKILL_TYPE, ratio * configSkillIncrease.Value);
+                        __instance.RaiseSkill((Skills.SkillType)SKILL_TYPE, ratio * fitnessConfig.SkillIncrease);
                         ___m_nview.GetZDO().Set("fitness_progress", 0f);
                     } else
                     {
