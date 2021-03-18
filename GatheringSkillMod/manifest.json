@@ -1,1 +1,10 @@
-﻿
+﻿{
+  "name": "GatheringSkill",
+  "description": "Adds a new gathering skill to the game! ",
+  "version_number": "2.0.3",
+  "dependencies": [
+    "pipakin-SkillInjector-1.1.1",
+    "denikson-BepInExPack_Valheim-5.4.800"
+  ],
+  "website_url": "https://github.com/pipakin/PipakinsMods/tree/master/GatheringSkillMod"
+}

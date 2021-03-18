@@ -82,13 +82,23 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="manifest.json" />
-    <None Include="README.md" />
+    <None Include="manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="README.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="gathering.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>powershell Compress-Archive -Path '$(TargetDir)GatheringSkillMod.dll', '$(TargetDir)icon.png', '$(TargetDir)manifest.json', '$(TargetDir)README.md', '$(TargetDir)gathering.png' -DestinationPath '$(SolutionDir)PublishOutput\GatheringSkillMod.zip' -Force</PostBuildEvent>
+  </PropertyGroup>
 </Project>
