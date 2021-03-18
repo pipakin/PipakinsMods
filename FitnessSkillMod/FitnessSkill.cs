@@ -15,7 +15,7 @@ namespace Pipakin.FitnessSkillMod
     [BepInDependency("com.pipakin.SkillInjectorMod")]
     public class FitnessSkill : BaseUnityPlugin
     {
-        const string MOD_ID = "com.pipakin.GatheringSkillMod";
+        const string MOD_ID = "com.pipakin.FitnessSkillMod";
         private readonly Harmony harmony = new Harmony(MOD_ID);
 
         private static FitnessConfig fitnessConfig = new FitnessConfig();

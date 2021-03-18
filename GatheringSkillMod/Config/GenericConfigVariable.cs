@@ -18,7 +18,7 @@ namespace Pipakin.GatheringMod.Config
         {
             get
             {
-                return Traverse.Create(backingStore).Field("Value").GetValue<T>();
+                return Traverse.Create(backingStore).Property("Value").GetValue<T>();
             }
         }
 
@@ -27,7 +27,7 @@ namespace Pipakin.GatheringMod.Config
             if(assembly != null)
             {
                 var method = assembly.GetType("ModConfigEnforcer.ConfigManager").GetMethods().First(x => x.Name =="RegisterModConfigVariable" && x.IsGenericMethod).MakeGenericMethod(typeof(T));
-                method.Invoke(null, new object[] { id, varName, defaultValue, configSection, configDescription, localOnly });
+                backingStore = method.Invoke(null, new object[] { id, varName, defaultValue, configSection, configDescription, localOnly });
             } else {
                 backingStore = config.Bind<T>(configSection, varName, defaultValue, configDescription);
             }
