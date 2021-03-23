@@ -50,12 +50,13 @@ public class GatheringSkillMod : BaseUnityPlugin
     {
         ...
         SkillManager.RegisterSkill(
-            new SkillConfig(
-                SKILL_TYPE, 
+            new SkillManager.FromSkillInjector(
+                "gathering", 
+                (Skills.SkillType)SKILL_TYPE,
                 "Gathering", 
                 "Gathering berries and other items", 
-                1.0f, 
-                LoadCustomTexture()
+                LoadCustomTexture(), 
+                1.0f
             )
         );
         ...
