@@ -1,34 +1,70 @@
-﻿Injects skills into Valheim's skill system. Handles adding to the list and both the cheat options (Raise/Reset). Leaves you to handle getting XP and actually applying effects.  You will need to pick a unique number for your skill id. I'd stick with numbers > 200.
+﻿## Important Announcement
 
-Usage:
-```
-    ﻿[BepInDependency("com.pipakin.SkillInjectorMod")]
-    public class MySkillMod: BaseUnityPlugin
+SkillInjector is now part of JotunnLib! You should switch over to that library for your skill injection needs. This library will continue to work as a thin wrapper over JotunnLib so if you're lazy like me you don't need to switch over till you have time.
+
+### FAQ
+
+* Is this going to break my mod?
+  * No, as long as players download the new dependency it should still work as written.
+* But I don't _want_ to depend on a big library.
+  * First, not a question. Second, JotunnLib is a really thin layer over Valheim that provides lots of goodies. Plus our two mods would step all over each other and I don't want that.
+* So you're abandoning your mod?
+  * Naw, I only created this because no one else had. I'll be keeping up with JotunnLib development and probably contribute some PRs of my own against it.
+* Will you be taking down this mod?
+  * No. It will remain as a small wrapper as long as even 1 person is dependant on it.
+* Ok, you talked me into taking the plunge. how do I switch over fully to JotunnLib?
+  * luckily, it's super easy. For example (from my gathering mod):
+``` 
+using Pipakin.SkillInjectorMod;
+...
+
+[BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "2.0.3")]
+[BepInDependency("com.pipakin.SkillInjectorMod")]
+public class GatheringSkillMod : BaseUnityPlugin
+{
+    void Awake()
     {
-        const int SKILL_TYPE = 299;
-        ﻿...
-
-        void Awake()
-        ﻿﻿{
-        ﻿SkillInjector.RegisterNewSkill(SKILL_TYPE, "MyCoolSkill", "Doing Cool Stuff", 1.0f, null, Skills.SkillType.Unarmed);
-        ﻿﻿}
-
         ...
-    ﻿}
+        SkillInjector.RegisterNewSkill(
+            SKILL_TYPE, 
+            "Gathering", 
+            "Gathering berries and other items", 
+            1.0f, 
+            LoadCustomTexture(), 
+            Skills.SkillType.Unarmed);
+        ...
+    }
+    ...
+}
+```
+Becomes:
+``` 
+using JotunnLib.Managers;
+...
+
+[BepInPlugin("com.pipakin.GatheringSkillMod", "GatheringSkillMod", "2.0.3")]
+[BepInDependency("com.bepinex.plugins.jotunnlib")]
+public class GatheringSkillMod : BaseUnityPlugin
+{
+    void Awake()
+    {
+        ...
+        SkillManager.RegisterSkill(
+            new SkillConfig(
+                SKILL_TYPE, 
+                "Gathering", 
+                "Gathering berries and other items", 
+                1.0f, 
+                LoadCustomTexture()
+            )
+        );
+        ...
+    }
+    ...
+}
 ```
 
-the parameters are:
-
-* `id` - the numeric id for your skill. MUST BE UNIQUE.
-* `name` - the name of your skill.
-* `description` - the description of your skill.
-* `increment` - the increment to adjust your skill by when increasing.
-* `icon` - the icon for your skill (Unity Sprite). Can be null if you use a template skill to base your icon on.
-* `template` - the skill to copy the icon from if you don't provide an icon.
-
-
-Known issues:
-* Doesn't support multiple languages for the skill name (working on it).
+## Source (such as it is)
 
 Github link:
 https://github.com/pipakin/PipakinsMods/tree/master/SkillInjector
